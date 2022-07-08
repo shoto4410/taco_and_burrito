@@ -28,3 +28,6 @@ train_loader = DataLoader(
 test_loader = DataLoader(
     test_imgs, batch_size=32, shuffle=False
 )
+
+print(train_imgs.classes)
+print(train_imgs.class_to_idx)
