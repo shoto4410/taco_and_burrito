@@ -29,8 +29,8 @@ test_loader = DataLoader(
     test_imgs, batch_size=32, shuffle=False
 )
 
-print(train_imgs.classes)
-print(train_imgs.class_to_idx)
+""" print(train_imgs.classes)
+print(train_imgs.class_to_idx) """
 
 
 from torchvision import models
@@ -61,3 +61,37 @@ def eval_net(net, data_loader, device="cpu"):
         #予測精度を計算
         acc = (ys == ypreds).float().sum() / len(ys)
         return acc.item()
+    
+def train_net(net, train_loader, test_loader, only_fc=True, optimizer_cls=optim.Adam, loss_fn=nn.CrossEntropyLoss(), n_iter=10, device="cpu"):
+    train_losses = []
+    train_acc = []
+    val_acc = []
+    
+    if only_fc:
+        optimizer = optimizer_cls(net.fc.parameters())
+    else:
+        optimizer = optimizer_cls(net.parameters())
+    
+    for epoch in range(n_iter):
+        ruuning_loss = 0.0
+        
+        net.train()
+        n = 0
+        n_acc = 0
+        for i, (xx, yy) in tqdm.tqdm(enumerate(train_loader), total=len(train_loader)):
+            xx = xx.to(device)
+            yy = yy.to(device)
+            h = net(xx)
+            loss = loss_fn(h, yy)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+            n += len(xx)
+            _, y_pred = h.max(1)
+            n_acc += (yy == y_pred).float().sum().item()
+        train_losses.append(running_loss / i)
+        train_acc.append(n_acc / n)
+        val_acc.append(eval_net(net, test_loader), device)
+        
+        print(epoch, train_losses[-1], train_acc[-1], val_acc[-1], flush=True)
