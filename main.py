@@ -44,3 +44,20 @@ for p in net.parameters():
 #最後の線形層を付け替える
 fc_input_dim = net.fc.in_features
 net.fc = nn.Linear(fc_input_dim, 2)
+
+def eval_net(net, data_loader, device="cpu"):
+    #DropoutやBatchnormを無効化
+    net.eval()
+    ypreds = []
+    ys = []
+    for x, y in data_loader:
+        x = x.to(device)
+        y = y.to(device)
+        #確率が最大のクラスを予測
+        with torch.no_grad():
+            _, y_pred = net(x).max(1)
+        ys.append(y)
+        ypreds.append(y_pred)
+        #予測精度を計算
+        acc = (ys == ypreds).float().sum() / len(ys)
+        return acc.item()
