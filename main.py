@@ -31,3 +31,16 @@ test_loader = DataLoader(
 
 print(train_imgs.classes)
 print(train_imgs.class_to_idx)
+
+
+from torchvision import models
+#resnet18 load
+net = models.resnet18(pretrained=True)
+
+#all parameters 微分対象外にする
+for p in net.parameters():
+    p.requires_grad = False
+
+#最後の線形層を付け替える
+fc_input_dim = net.fc.in_features
+net.fc = nn.Linear(fc_input_dim, 2)
